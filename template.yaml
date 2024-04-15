@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  lambda
+
+  Sample SAM Template for lambda
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+    # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
+    LoggingConfig:
+      LogFormat: JSON
+Resources:
+  OSWriterFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: os_writer/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Environment:
+        Variables:
+          ES_DOMAIN: <opensearch domain>
+          ES_USER:  <opensearch user>
+          ES_PASSWORD: <opensearch password>
+      Policies:
+      - Statement:
+        - Sid: VisualEditor0
+          Effect: Allow
+          Action:
+          - "kinesis:DescribeStream"
+          - "kinesis:DescribeStreamSummary"
+          - "kinesis:GetRecords"
+          - "kinesis:GetShardIterator"
+          - "kinesis:ListShards"
+          - "kinesis:ListStreams"
+          - "kinesis:SubscribeToShard"
+          Resource: '*'
+      Events:
+        KinesisEvents:
+          Type: Kinesis
+          Properties:
+            Stream: arn:aws:kinesis:ap-southeast-1:654654329682:stream/cdc-data-stream
+            StartingPosition: LATEST
+            BatchSize: 1
+            MaximumBatchingWindowInSeconds: 10
+            Enabled: true
+            ParallelizationFactor: 1
+            MaximumRetryAttempts: 1
+            BisectBatchOnFunctionError: true
+            MaximumRecordAgeInSeconds: 60
+            TumblingWindowInSeconds: 0
